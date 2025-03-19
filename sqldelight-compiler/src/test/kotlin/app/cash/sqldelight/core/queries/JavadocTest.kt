@@ -2,8 +2,8 @@ package app.cash.sqldelight.core.queries
 
 import app.cash.sqldelight.core.TestDialect
 import app.cash.sqldelight.core.TestDialect.SQLITE_3_18
-import app.cash.sqldelight.core.compiler.MutatorQueryGenerator
-import app.cash.sqldelight.core.compiler.SelectQueryGenerator
+import app.cash.sqldelight.core.compiler.kotlin.MutatorQueryGenerator
+import app.cash.sqldelight.core.compiler.kotlin.SelectQueryGenerator
 import app.cash.sqldelight.core.dialects.binderCheck
 import app.cash.sqldelight.core.dialects.cursorCheck
 import app.cash.sqldelight.core.dialects.textType

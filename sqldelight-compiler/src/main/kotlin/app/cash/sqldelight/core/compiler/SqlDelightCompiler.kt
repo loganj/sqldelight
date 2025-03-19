@@ -17,6 +17,11 @@ package app.cash.sqldelight.core.compiler
 
 import app.cash.sqldelight.core.SqlDelightFileIndex
 import app.cash.sqldelight.core.capitalize
+import app.cash.sqldelight.core.compiler.kotlin.DatabaseExposerGenerator
+import app.cash.sqldelight.core.compiler.kotlin.DatabaseGenerator
+import app.cash.sqldelight.core.compiler.kotlin.QueriesTypeGenerator
+import app.cash.sqldelight.core.compiler.kotlin.QueryInterfaceGenerator
+import app.cash.sqldelight.core.compiler.kotlin.TableInterfaceGenerator
 import app.cash.sqldelight.core.compiler.model.NamedQuery
 import app.cash.sqldelight.core.lang.MigrationFile
 import app.cash.sqldelight.core.lang.SqlDelightFile

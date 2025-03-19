@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.sqldelight.core.compiler
+package app.cash.sqldelight.core.compiler.kotlin
 
 import app.cash.sqldelight.core.capitalize
 import app.cash.sqldelight.core.compiler.SqlDelightCompiler.allocateName
-import app.cash.sqldelight.core.compiler.integration.javadocText
+import app.cash.sqldelight.core.compiler.kotlin.integration.javadocText
 import app.cash.sqldelight.core.lang.ADAPTER_NAME
 import app.cash.sqldelight.core.lang.psi.ColumnTypeMixin
 import app.cash.sqldelight.core.lang.util.childOfType
 import app.cash.sqldelight.core.lang.util.columnDefSource
-import app.cash.sqldelight.core.lang.util.type
 import app.cash.sqldelight.core.psi.SqlDelightStmtIdentifier
 import com.alecstrong.sql.psi.core.psi.LazyQuery
 import com.alecstrong.sql.psi.core.psi.NamedElement

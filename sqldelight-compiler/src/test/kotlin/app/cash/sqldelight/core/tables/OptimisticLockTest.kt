@@ -1,6 +1,6 @@
 package app.cash.sqldelight.core.tables
 
-import app.cash.sqldelight.core.compiler.MutatorQueryGenerator
+import app.cash.sqldelight.core.compiler.kotlin.MutatorQueryGenerator
 import app.cash.sqldelight.dialects.postgresql.PostgreSqlDialect
 import app.cash.sqldelight.test.util.FixtureCompiler
 import app.cash.sqldelight.test.util.withUnderscores

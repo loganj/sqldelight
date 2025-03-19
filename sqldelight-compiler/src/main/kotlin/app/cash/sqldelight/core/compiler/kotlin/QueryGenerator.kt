@@ -1,6 +1,6 @@
-package app.cash.sqldelight.core.compiler
+package app.cash.sqldelight.core.compiler.kotlin
 
-import app.cash.sqldelight.core.compiler.integration.javadocText
+import app.cash.sqldelight.core.compiler.kotlin.integration.javadocText
 import app.cash.sqldelight.core.compiler.model.BindableQuery
 import app.cash.sqldelight.core.compiler.model.NamedMutator
 import app.cash.sqldelight.core.compiler.model.NamedQuery

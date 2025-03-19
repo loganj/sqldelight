@@ -1,7 +1,7 @@
 package app.cash.sqldelight.core.triggers
 
 import app.cash.sqldelight.core.TestDialect
-import app.cash.sqldelight.core.compiler.MutatorQueryGenerator
+import app.cash.sqldelight.core.compiler.kotlin.MutatorQueryGenerator
 import app.cash.sqldelight.test.util.FixtureCompiler
 import app.cash.sqldelight.test.util.withUnderscores
 import com.google.common.truth.Truth.assertThat

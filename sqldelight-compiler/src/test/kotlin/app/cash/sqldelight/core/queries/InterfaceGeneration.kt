@@ -1,9 +1,9 @@
 package app.cash.sqldelight.core.queries
 
 import app.cash.sqldelight.core.TestDialect
-import app.cash.sqldelight.core.compiler.QueryInterfaceGenerator
+import app.cash.sqldelight.core.compiler.kotlin.QueryInterfaceGenerator
 import app.cash.sqldelight.core.compiler.SqlDelightCompiler
-import app.cash.sqldelight.core.compiler.TableInterfaceGenerator
+import app.cash.sqldelight.core.compiler.kotlin.TableInterfaceGenerator
 import app.cash.sqldelight.dialects.postgresql.PostgreSqlDialect
 import app.cash.sqldelight.test.util.FixtureCompiler
 import app.cash.sqldelight.test.util.withInvariantLineSeparators

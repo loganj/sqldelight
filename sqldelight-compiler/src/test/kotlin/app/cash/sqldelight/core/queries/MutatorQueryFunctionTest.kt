@@ -1,7 +1,7 @@
 package app.cash.sqldelight.core.queries
 
 import app.cash.sqldelight.core.TestDialect
-import app.cash.sqldelight.core.compiler.MutatorQueryGenerator
+import app.cash.sqldelight.core.compiler.kotlin.MutatorQueryGenerator
 import app.cash.sqldelight.core.dialects.binderCheck
 import app.cash.sqldelight.core.dialects.textType
 import app.cash.sqldelight.dialects.sqlite_3_24.SqliteDialect

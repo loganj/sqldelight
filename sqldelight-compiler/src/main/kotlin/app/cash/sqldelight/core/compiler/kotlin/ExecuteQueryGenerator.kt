@@ -1,4 +1,4 @@
-package app.cash.sqldelight.core.compiler
+package app.cash.sqldelight.core.compiler.kotlin
 
 import app.cash.sqldelight.core.capitalize
 import app.cash.sqldelight.core.compiler.model.NamedExecute

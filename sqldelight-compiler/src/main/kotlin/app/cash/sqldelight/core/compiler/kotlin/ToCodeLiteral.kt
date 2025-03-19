@@ -1,4 +1,4 @@
-package app.cash.sqldelight.core.compiler
+package app.cash.sqldelight.core.compiler.kotlin
 
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.MemberName

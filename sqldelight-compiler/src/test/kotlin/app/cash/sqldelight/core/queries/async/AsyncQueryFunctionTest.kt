@@ -1,6 +1,6 @@
 package app.cash.sqldelight.core.queries.async
 
-import app.cash.sqldelight.core.compiler.SelectQueryGenerator
+import app.cash.sqldelight.core.compiler.kotlin.SelectQueryGenerator
 import app.cash.sqldelight.test.util.FixtureCompiler
 import com.google.common.truth.Truth
 import com.squareup.burst.BurstJUnit4

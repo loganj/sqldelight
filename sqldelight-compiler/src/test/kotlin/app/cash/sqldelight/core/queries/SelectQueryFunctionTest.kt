@@ -1,7 +1,7 @@
 package app.cash.sqldelight.core.queries
 
 import app.cash.sqldelight.core.TestDialect
-import app.cash.sqldelight.core.compiler.SelectQueryGenerator
+import app.cash.sqldelight.core.compiler.kotlin.SelectQueryGenerator
 import app.cash.sqldelight.core.dialects.intType
 import app.cash.sqldelight.test.util.FixtureCompiler
 import app.cash.sqldelight.test.util.withUnderscores

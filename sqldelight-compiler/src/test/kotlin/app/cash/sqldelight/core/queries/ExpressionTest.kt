@@ -4,7 +4,7 @@ import app.cash.sqldelight.core.TestDialect
 import app.cash.sqldelight.core.TestDialect.HSQL
 import app.cash.sqldelight.core.TestDialect.MYSQL
 import app.cash.sqldelight.core.TestDialect.POSTGRESQL
-import app.cash.sqldelight.core.compiler.SelectQueryGenerator
+import app.cash.sqldelight.core.compiler.kotlin.SelectQueryGenerator
 import app.cash.sqldelight.core.dialects.blobType
 import app.cash.sqldelight.core.dialects.textType
 import app.cash.sqldelight.test.util.FixtureCompiler

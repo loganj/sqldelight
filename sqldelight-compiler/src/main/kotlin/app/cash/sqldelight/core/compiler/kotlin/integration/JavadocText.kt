@@ -1,4 +1,4 @@
-package app.cash.sqldelight.core.compiler.integration
+package app.cash.sqldelight.core.compiler.kotlin.integration
 
 import com.intellij.psi.PsiElement
 

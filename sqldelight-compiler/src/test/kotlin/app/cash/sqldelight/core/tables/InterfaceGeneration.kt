@@ -1,7 +1,7 @@
 package app.cash.sqldelight.core.tables
 
 import app.cash.sqldelight.core.compiler.SqlDelightCompiler
-import app.cash.sqldelight.core.compiler.TableInterfaceGenerator
+import app.cash.sqldelight.core.compiler.kotlin.TableInterfaceGenerator
 import app.cash.sqldelight.dialects.hsql.HsqlDialect
 import app.cash.sqldelight.dialects.mysql.MySqlDialect
 import app.cash.sqldelight.dialects.postgresql.PostgreSqlDialect

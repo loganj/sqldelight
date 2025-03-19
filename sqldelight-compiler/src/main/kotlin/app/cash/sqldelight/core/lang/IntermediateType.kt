@@ -15,8 +15,8 @@
  */
 package app.cash.sqldelight.core.lang
 
-import app.cash.sqldelight.core.compiler.integration.adapterName
-import app.cash.sqldelight.core.compiler.integration.adapterProperty
+import app.cash.sqldelight.core.compiler.kotlin.integration.adapterName
+import app.cash.sqldelight.core.compiler.kotlin.integration.adapterProperty
 import app.cash.sqldelight.core.lang.psi.ColumnTypeMixin
 import app.cash.sqldelight.core.lang.util.isArrayParameter
 import app.cash.sqldelight.dialect.api.IntermediateType
