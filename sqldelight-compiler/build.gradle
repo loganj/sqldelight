@@ -26,6 +26,7 @@ dependencies {
   api projects.sqldelightCompiler.dialect
 
   implementation libs.jgrapht
+  implementation libs.swiftpoet
 
   compileOnly libs.sqliteJdbc
   compileOnly(projects.sqldelightCompiler.environment) {
