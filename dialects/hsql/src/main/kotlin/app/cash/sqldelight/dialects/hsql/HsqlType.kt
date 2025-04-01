@@ -1,6 +1,8 @@
 package app.cash.sqldelight.dialects.hsql
 
 import app.cash.sqldelight.dialect.api.DialectType
+import app.cash.sqldelight.dialect.api.KotlinType
+import app.cash.sqldelight.dialect.api.TargetType
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.BYTE
 import com.squareup.kotlinpoet.CodeBlock
@@ -9,7 +11,7 @@ import com.squareup.kotlinpoet.LONG
 import com.squareup.kotlinpoet.SHORT
 import com.squareup.kotlinpoet.TypeName
 
-internal enum class HsqlType(override val javaType: TypeName) : DialectType {
+internal enum class HsqlType(override val typeName: TypeName) : DialectType, KotlinType {
   TINY_INT(BYTE) {
     override fun decode(value: CodeBlock) = CodeBlock.of("%L.toByte()", value)
 
@@ -33,6 +35,8 @@ internal enum class HsqlType(override val javaType: TypeName) : DialectType {
   },
   ;
 
+  override fun toKotlinType() = this
+
   override fun prepareStatementBinder(columnIndex: CodeBlock, value: CodeBlock): CodeBlock {
     return CodeBlock.builder()
       .add(
@@ -51,4 +55,6 @@ internal enum class HsqlType(override val javaType: TypeName) : DialectType {
       },
     )
   }
+
+
 }

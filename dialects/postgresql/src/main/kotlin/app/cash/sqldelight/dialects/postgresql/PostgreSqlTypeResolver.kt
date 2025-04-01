@@ -2,6 +2,7 @@ package app.cash.sqldelight.dialects.postgresql
 
 import app.cash.sqldelight.dialect.api.DialectType
 import app.cash.sqldelight.dialect.api.IntermediateType
+import app.cash.sqldelight.dialect.api.KotlinType
 import app.cash.sqldelight.dialect.api.PrimitiveType.BLOB
 import app.cash.sqldelight.dialect.api.PrimitiveType.BOOLEAN
 import app.cash.sqldelight.dialect.api.PrimitiveType.INTEGER
@@ -9,6 +10,7 @@ import app.cash.sqldelight.dialect.api.PrimitiveType.REAL
 import app.cash.sqldelight.dialect.api.PrimitiveType.TEXT
 import app.cash.sqldelight.dialect.api.QueryWithResults
 import app.cash.sqldelight.dialect.api.ReturningQueryable
+import app.cash.sqldelight.dialect.api.TargetType
 import app.cash.sqldelight.dialect.api.TypeResolver
 import app.cash.sqldelight.dialect.api.encapsulatingType
 import app.cash.sqldelight.dialect.api.encapsulatingTypePreferringKotlin
@@ -46,6 +48,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.tree.TokenSet
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asTypeName
 
 class PostgreSqlTypeResolver(private val parentResolver: TypeResolver) : TypeResolver by parentResolver {
@@ -366,8 +369,9 @@ class PostgreSqlTypeResolver(private val parentResolver: TypeResolver) : TypeRes
 
     private fun arrayIntermediateType(type: IntermediateType): IntermediateType {
       return IntermediateType(
-        object : DialectType {
-          override val javaType = Array::class.asTypeName().parameterizedBy(type.javaType)
+        object : DialectType, KotlinType {
+          override val typeName = Array::class.asTypeName().parameterizedBy(type.javaType)
+          override fun toKotlinType() = this
           override fun prepareStatementBinder(columnIndex: CodeBlock, value: CodeBlock) =
             CodeBlock.of("bindObject(%L, %L)\n", columnIndex, value)
           override fun cursorGetter(columnIndex: Int, cursorName: String) =

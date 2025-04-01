@@ -1,6 +1,8 @@
 package app.cash.sqldelight.dialects.mysql
 
 import app.cash.sqldelight.dialect.api.DialectType
+import app.cash.sqldelight.dialect.api.KotlinType
+import app.cash.sqldelight.dialect.api.TargetType
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.BYTE
 import com.squareup.kotlinpoet.ClassName
@@ -10,7 +12,7 @@ import com.squareup.kotlinpoet.LONG
 import com.squareup.kotlinpoet.SHORT
 import com.squareup.kotlinpoet.TypeName
 
-internal enum class MySqlType(override val javaType: TypeName) : DialectType {
+internal enum class MySqlType(override val typeName: TypeName) : DialectType, KotlinType {
   TINY_INT(BYTE) {
     override fun decode(value: CodeBlock) = CodeBlock.of("%L.toByte()", value)
 
@@ -44,6 +46,8 @@ internal enum class MySqlType(override val javaType: TypeName) : DialectType {
   TIMESTAMP(ClassName("java.time", "OffsetDateTime")),
   ;
 
+  override fun toKotlinType() = this
+
   override fun prepareStatementBinder(columnIndex: CodeBlock, value: CodeBlock): CodeBlock {
     return CodeBlock.builder()
       .add(
@@ -64,7 +68,7 @@ internal enum class MySqlType(override val javaType: TypeName) : DialectType {
         DATE, TIME, DATETIME, TIMESTAMP -> "$cursorName.getObject<%T>($columnIndex)"
         NUMERIC -> "$cursorName.getBigDecimal($columnIndex)"
       },
-      javaType,
+      typeName,
     )
   }
 }

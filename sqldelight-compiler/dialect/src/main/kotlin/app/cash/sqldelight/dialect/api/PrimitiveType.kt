@@ -11,7 +11,7 @@ import com.squareup.kotlinpoet.asTypeName
 /**
  * Types which are retrieved the same way for all dialects.
  */
-enum class PrimitiveType(override val javaType: TypeName) : DialectType {
+enum class PrimitiveType(override val typeName: TypeName) : DialectType, KotlinType {
   ARGUMENT(ANY.copy(nullable = true)),
   NULL(Nothing::class.asClassName().copy(nullable = true)),
   INTEGER(LONG),
@@ -20,6 +20,8 @@ enum class PrimitiveType(override val javaType: TypeName) : DialectType {
   BOOLEAN(com.squareup.kotlinpoet.BOOLEAN),
   BLOB(ByteArray::class.asTypeName()),
   ;
+
+  override fun toKotlinType() = this
 
   override fun prepareStatementBinder(columnIndex: CodeBlock, value: CodeBlock): CodeBlock {
     return CodeBlock.builder()

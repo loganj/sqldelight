@@ -28,6 +28,8 @@ import app.cash.sqldelight.core.psi.SqlDelightParameterizedJavaType
 import app.cash.sqldelight.core.psi.SqlDelightStmtList
 import app.cash.sqldelight.dialect.api.DialectType
 import app.cash.sqldelight.dialect.api.IntermediateType
+import app.cash.sqldelight.dialect.api.KotlinType
+import app.cash.sqldelight.dialect.api.TargetType
 import com.alecstrong.sql.psi.core.SqlAnnotationHolder
 import com.alecstrong.sql.psi.core.psi.Queryable
 import com.alecstrong.sql.psi.core.psi.SqlColumnDef
@@ -91,7 +93,7 @@ internal abstract class ColumnTypeMixin(
         ?.type()?.dialectType?.asSafely<ValueTypeDialectType>() ?: return@let // SqlDelight type
       type = type.copy(
         dialectType = dialectType,
-        javaType = dialectType.javaType,
+        javaType = dialectType.toKotlinType().typeName,
       )
     }
 
@@ -99,7 +101,7 @@ internal abstract class ColumnTypeMixin(
       val newDialectType = ValueTypeDialectType(valueType.name!!, type.dialectType)
       type = type.copy(
         dialectType = newDialectType,
-        javaType = newDialectType.javaType,
+        javaType = newDialectType.toKotlinType().typeName,
       )
     }
     if (columnConstraintList.none {
@@ -131,7 +133,10 @@ internal abstract class ColumnTypeMixin(
       return PropertySpec
         .builder(
           name = "${allocateName(columnName)}Adapter",
-          type = columnAdapterType.parameterizedBy(customType, typeResolver.definitionType(typeName).dialectType.javaType),
+          type = columnAdapterType.parameterizedBy(
+            customType,
+            typeResolver.definitionType(typeName).dialectType.toKotlinType().typeName
+          ),
         )
         .build()
     }
@@ -243,17 +248,28 @@ internal abstract class ColumnTypeMixin(
     name: String,
     val wrappedType: DialectType,
   ) : DialectType by wrappedType {
-    override val javaType: TypeName by lazy {
-      val tableName = PsiTreeUtil.getParentOfType(this@ColumnTypeMixin, Queryable::class.java)!!.tableExposed().tableName
-      ClassName(tableName.sqFile().packageName!!, allocateName(tableName).capitalize(), name)
+
+    private val kotlinType: KotlinType = object : KotlinType {
+      override val typeName: TypeName by lazy {
+        val tableName = PsiTreeUtil.getParentOfType(this@ColumnTypeMixin, Queryable::class.java)!!.tableExposed().tableName
+        ClassName(tableName.sqFile().packageName!!, allocateName(tableName).capitalize(), name)
+      }
+
+      override fun cursorGetter(columnIndex: Int, cursorName: String): CodeBlock =
+        wrappedType.toKotlinType().cursorGetter(columnIndex, cursorName)
+
+      override fun prepareStatementBinder(columnIndex: CodeBlock, value: CodeBlock): CodeBlock =
+        wrappedType.toKotlinType().prepareStatementBinder(columnIndex, value)
+
+      override fun encode(value: CodeBlock): CodeBlock {
+        val columnName = (parent as SqlColumnDef).columnName
+        return wrappedType.toKotlinType().encode(CodeBlock.of("%L.${columnName.text}", value))
+      }
+
+      override fun decode(value: CodeBlock) = CodeBlock.of("%T(%L)", typeName, wrappedType.toKotlinType().decode(value))
     }
 
-    override fun encode(value: CodeBlock): CodeBlock {
-      val columnName = (parent as SqlColumnDef).columnName
-      return wrappedType.encode(CodeBlock.of("%L.${columnName.text}", value))
-    }
-
-    override fun decode(value: CodeBlock) = CodeBlock.of("%T(%L)", javaType, wrappedType.decode(value))
+    override fun toKotlinType() = kotlinType
   }
 
   private val ASTNode.prevVisibleSibling: ASTNode?

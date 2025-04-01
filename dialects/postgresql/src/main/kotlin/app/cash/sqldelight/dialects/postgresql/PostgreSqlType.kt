@@ -1,6 +1,8 @@
 package app.cash.sqldelight.dialects.postgresql
 
 import app.cash.sqldelight.dialect.api.DialectType
+import app.cash.sqldelight.dialect.api.KotlinType
+import app.cash.sqldelight.dialect.api.TargetType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.INT
@@ -10,7 +12,7 @@ import com.squareup.kotlinpoet.SHORT
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 
-internal enum class PostgreSqlType(override val javaType: TypeName) : DialectType {
+internal enum class PostgreSqlType(override val typeName: TypeName) : DialectType, KotlinType {
   SMALL_INT(SHORT),
   INTEGER(INT),
   BIG_INT(LONG),
@@ -25,6 +27,8 @@ internal enum class PostgreSqlType(override val javaType: TypeName) : DialectTyp
   TSVECTOR(STRING),
   XML(STRING),
   ;
+
+  override fun toKotlinType() = this
 
   override fun prepareStatementBinder(columnIndex: CodeBlock, value: CodeBlock): CodeBlock {
     return when (this) {
@@ -63,7 +67,7 @@ internal enum class PostgreSqlType(override val javaType: TypeName) : DialectTyp
         NUMERIC -> "$cursorName.getBigDecimal($columnIndex)"
         JSON, TSVECTOR, XML -> "$cursorName.getString($columnIndex)"
       },
-      javaType,
+      typeName,
     )
   }
 }

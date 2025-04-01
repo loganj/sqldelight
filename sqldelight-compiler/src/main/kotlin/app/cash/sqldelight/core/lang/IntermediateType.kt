@@ -44,14 +44,14 @@ internal fun IntermediateType.preparedStatementBinder(
 ): CodeBlock {
   val codeBlock = extractedVariable?.let { CodeBlock.of(it) } ?: encodedJavaType()
   if (codeBlock != null) {
-    return dialectType.prepareStatementBinder(columnIndex, codeBlock)
+    return dialectType.toKotlinType().prepareStatementBinder(columnIndex, codeBlock)
   }
 
   val name = if (javaType.isNullable) "it" else this.name
   val decodedType = CodeBlock.of(name)
-  val encodedType = dialectType.encode(decodedType)
+  val encodedType = dialectType.toKotlinType().encode(decodedType)
 
-  return dialectType.prepareStatementBinder(
+  return dialectType.toKotlinType().prepareStatementBinder(
     columnIndex,
     when {
       decodedType == encodedType -> CodeBlock.of(this.name)
@@ -66,7 +66,7 @@ internal fun IntermediateType.encodedJavaType(): CodeBlock? {
   return (column?.columnType as ColumnTypeMixin?)?.adapter()?.let { adapter ->
     val parent = PsiTreeUtil.getParentOfType(column, Queryable::class.java)
     val adapterName = parent!!.tableExposed().adapterName
-    val value = dialectType.encode(
+    val value = dialectType.toKotlinType().encode(
       CodeBlock.of("$adapterName.%N.encode($name)", adapter),
     )
     if (javaType.isNullable) {
@@ -86,7 +86,7 @@ private fun CodeBlock.wrapInLet(type: IntermediateType): CodeBlock {
 }
 
 internal fun IntermediateType.cursorGetter(columnIndex: Int): CodeBlock {
-  var cursorGetter = dialectType.cursorGetter(columnIndex, CURSOR_NAME)
+  var cursorGetter = dialectType.toKotlinType().cursorGetter(columnIndex, CURSOR_NAME)
 
   if (!javaType.isNullable) {
     cursorGetter = CodeBlock.of("%L!!", cursorGetter)
@@ -100,17 +100,17 @@ internal fun IntermediateType.cursorGetter(columnIndex: Int): CodeBlock {
         "%L?.let { $adapterName.%N.decode(%L) }",
         cursorGetter,
         adapter,
-        dialectType.decode(CodeBlock.of("it")),
+        dialectType.toKotlinType().decode(CodeBlock.of("it")),
       )
     } else {
-      CodeBlock.of("$adapterName.%N.decode(%L)", adapter, dialectType.decode(cursorGetter))
+      CodeBlock.of("$adapterName.%N.decode(%L)", adapter, dialectType.toKotlinType().decode(cursorGetter))
     }
   } ?: run {
     val encodedType = cursorGetter
-    val decodedType = dialectType.decode(encodedType)
+    val decodedType = dialectType.toKotlinType().decode(encodedType)
 
     if (javaType.isNullable && encodedType != decodedType) {
-      CodeBlock.of("%L?.let { %L }", cursorGetter, dialectType.decode(CodeBlock.of("it")))
+      CodeBlock.of("%L?.let { %L }", cursorGetter, dialectType.toKotlinType().decode(CodeBlock.of("it")))
     } else {
       decodedType
     }

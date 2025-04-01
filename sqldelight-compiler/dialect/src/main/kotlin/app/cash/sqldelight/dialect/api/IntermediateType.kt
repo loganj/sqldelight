@@ -10,7 +10,7 @@ import com.squareup.kotlinpoet.TypeName
  */
 data class IntermediateType(
   val dialectType: DialectType,
-  val javaType: TypeName = dialectType.javaType,
+  val javaType: TypeName = dialectType.toKotlinType().typeName,
   /**
    * The column definition this type is sourced from, or null if there is none.
    */
