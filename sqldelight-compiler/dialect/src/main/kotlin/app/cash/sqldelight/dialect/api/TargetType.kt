@@ -1,9 +1,8 @@
 package app.cash.sqldelight.dialect.api
 
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.TypeName
 
-typealias KotlinType = TargetType<TypeName, CodeBlock>
+typealias KotlinType = TargetType<com.squareup.kotlinpoet.TypeName, com.squareup.kotlinpoet.CodeBlock>
+typealias SwiftType = TargetType<io.outfoxx.swiftpoet.TypeName, io.outfoxx.swiftpoet.CodeBlock>
 
 interface TargetType<TypeNameType, CodeBlockType> {
   val typeName: TypeNameType
