@@ -1,6 +1,6 @@
 package app.cash.sqldelight.core
 
-import app.cash.sqldelight.core.lang.argumentType
+import app.cash.sqldelight.core.compiler.kotlin.getParameters
 import app.cash.sqldelight.core.lang.types.typeResolver
 import app.cash.sqldelight.core.lang.util.argumentType
 import app.cash.sqldelight.core.lang.util.findChildrenOfType
@@ -389,7 +389,8 @@ class BindArgsTest {
     }
   }
 
-  @Test fun `bind arg type in binary expression can be inferred from column`() {
+  @Test
+  fun `bind arg type in binary expression can be inferred from column`() {
     val file = FixtureCompiler.parseSql(
       """
         |CREATE TABLE data (
@@ -404,7 +405,7 @@ class BindArgsTest {
       tempFolder,
     )
     val column = file.namedQueries.first()
-    column.parameters.let { args ->
+    column.getParameters().let { args ->
       assertThat(args[0].dialectType).isEqualTo(PrimitiveType.INTEGER)
       assertThat(args[0].javaType).isEqualTo(Long::class.asClassName())
       assertThat(args[0].name).isEqualTo("datum1")
@@ -415,7 +416,8 @@ class BindArgsTest {
     }
   }
 
-  @Test fun `bind arg in arithmetic binary expression can be cast as type`() {
+  @Test
+  fun `bind arg in arithmetic binary expression can be cast as type`() {
     val file = FixtureCompiler.parseSql(
       """
         |CREATE TABLE data (
@@ -431,14 +433,15 @@ class BindArgsTest {
     )
 
     val column = file.namedQueries.first()
-    column.parameters.let { args ->
+    column.getParameters().let { args ->
       assertThat(args[0].dialectType).isEqualTo(PrimitiveType.REAL)
       assertThat(args[0].javaType).isEqualTo(Double::class.asClassName().copy(nullable = true))
       assertThat(args[0].name).isEqualTo("datum1")
     }
   }
 
-  @Test fun `bind arg in binary expression can be cast as type`() {
+  @Test
+  fun `bind arg in binary expression can be cast as type`() {
     val file = FixtureCompiler.parseSql(
       """
         |CREATE TABLE data (
@@ -453,7 +456,7 @@ class BindArgsTest {
     )
 
     val column = file.namedQueries.first()
-    column.parameters.let { args ->
+    column.getParameters().let { args ->
       assertThat(args[0].dialectType).isEqualTo(PrimitiveType.REAL)
       assertThat(args[0].javaType).isEqualTo(Double::class.asClassName().copy(nullable = true))
       assertThat(args[0].name).isEqualTo("datum1")
@@ -464,7 +467,8 @@ class BindArgsTest {
     }
   }
 
-  @Test fun `bind arg in binary expression can be cast as custom type`() {
+  @Test
+  fun `bind arg in binary expression can be cast as custom type`() {
     val file = FixtureCompiler.parseSql(
       """
         |import java.time.Instant;
@@ -490,7 +494,7 @@ class BindArgsTest {
     )
 
     val selectSession1 = file.namedQueries[0]
-    selectSession1.parameters.let { args ->
+    selectSession1.getParameters().let { args ->
       assertThat(args[0].javaType).isEqualTo(Instant::class.asClassName())
       assertThat(args[0].name).isEqualTo("createdAt")
 
@@ -499,7 +503,7 @@ class BindArgsTest {
     }
 
     val selectSession2 = file.namedQueries[1]
-    selectSession2.parameters.let { args ->
+    selectSession2.getParameters().let { args ->
       assertThat(args[0].javaType).isEqualTo(Instant::class.asClassName())
       assertThat(args[0].name).isEqualTo("createdAt")
     }

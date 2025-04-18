@@ -1,5 +1,6 @@
 package app.cash.sqldelight.intellij.run
 
+import app.cash.sqldelight.core.compiler.kotlin.getParameters
 import app.cash.sqldelight.core.compiler.model.BindableQuery
 import app.cash.sqldelight.core.lang.psi.StmtIdentifier
 import app.cash.sqldelight.core.lang.util.range
@@ -46,7 +47,7 @@ internal class RunSqlAction(
     val argumentList: List<IntRange> = bindableQuery.arguments
       .flatMap { it.bindArgs }
       .map { it.range }
-    val parameters: List<String> = bindableQuery.parameters.map { it.name }
+    val parameters: List<String> = bindableQuery.getParameters().map { it.name }
     return argumentList.zip(parameters) { range, name ->
       SqlParameter(
         name = name,

@@ -22,6 +22,7 @@ import app.cash.sqldelight.core.compiler.kotlin.DatabaseGenerator
 import app.cash.sqldelight.core.compiler.kotlin.QueriesTypeGenerator
 import app.cash.sqldelight.core.compiler.kotlin.QueryInterfaceGenerator
 import app.cash.sqldelight.core.compiler.kotlin.TableInterfaceGenerator
+import app.cash.sqldelight.core.compiler.kotlin.getInterfaceType
 import app.cash.sqldelight.core.compiler.model.NamedQuery
 import app.cash.sqldelight.core.lang.MigrationFile
 import app.cash.sqldelight.core.lang.SqlDelightFile
@@ -192,7 +193,8 @@ object SqlDelightCompiler {
   private fun List<NamedQuery>.writeQueryInterfaces(file: SqlDelightFile, output: FileAppender) {
     return filter { tryWithElement(it.select) { it.needsInterface() } == true }
       .forEach { namedQuery ->
-        val fileSpec = FileSpec.builder(namedQuery.interfaceType.packageName, namedQuery.name)
+        val packageName = namedQuery.getInterfaceType().packageName
+        val fileSpec = FileSpec.builder(packageName, namedQuery.name)
           .apply {
             tryWithElement(namedQuery.select) {
               val generator = QueryInterfaceGenerator(namedQuery)
@@ -201,7 +203,7 @@ object SqlDelightCompiler {
           }
           .build()
 
-        file.generatedDirectories(namedQuery.interfaceType.packageName)?.forEach { directory ->
+        file.generatedDirectories(packageName)?.forEach { directory ->
           fileSpec.writeToAndClose(output("$directory/${namedQuery.name.capitalize()}.kt"))
         }
       }

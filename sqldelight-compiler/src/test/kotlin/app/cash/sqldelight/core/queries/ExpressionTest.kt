@@ -5,6 +5,7 @@ import app.cash.sqldelight.core.TestDialect.HSQL
 import app.cash.sqldelight.core.TestDialect.MYSQL
 import app.cash.sqldelight.core.TestDialect.POSTGRESQL
 import app.cash.sqldelight.core.compiler.kotlin.SelectQueryGenerator
+import app.cash.sqldelight.core.compiler.kotlin.getParameters
 import app.cash.sqldelight.core.dialects.blobType
 import app.cash.sqldelight.core.dialects.textType
 import app.cash.sqldelight.test.util.FixtureCompiler
@@ -654,10 +655,10 @@ class ExpressionTest {
     )
 
     val query = file.namedQueries.first()
-    assertThat(query.parameters.size).isEqualTo(3)
-    assertThat(query.parameters[0].javaType).isEqualTo(LONG)
-    assertThat(query.parameters[1].javaType).isEqualTo(LONG)
-    assertThat(query.parameters[2].javaType).isEqualTo(LONG)
+    assertThat(query.getParameters().size).isEqualTo(3)
+    assertThat(query.getParameters()[0].javaType).isEqualTo(LONG)
+    assertThat(query.getParameters()[1].javaType).isEqualTo(LONG)
+    assertThat(query.getParameters()[2].javaType).isEqualTo(LONG)
   }
 
   @Test fun `min takes the proper type`() {
@@ -884,7 +885,7 @@ class ExpressionTest {
     )
 
     val query = file.namedMutators.first()
-    assertThat(query.parameters.single().javaType).isEqualTo(String::class.asClassName().copy(nullable = true))
+    assertThat(query.getParameters().single().javaType).isEqualTo(String::class.asClassName().copy(nullable = true))
   }
 
   @Test fun `insert expression gets the right type from inner query`() {
@@ -904,7 +905,7 @@ class ExpressionTest {
     )
 
     val query = file.namedMutators.first()
-    assertThat(query.parameters.single().javaType).isEqualTo(String::class.asClassName().copy(nullable = true))
+    assertThat(query.getParameters().single().javaType).isEqualTo(String::class.asClassName().copy(nullable = true))
   }
 
   @Test fun `null keyword makes column nullable`(dialect: TestDialect) {

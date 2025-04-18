@@ -28,7 +28,7 @@ open class ExecuteQueryGenerator(
       .apply { if (generateAsync) addModifiers(SUSPEND) }
       .also(this::addJavadoc)
       .addParameters(
-        query.parameters.map {
+        query.getParameters().map {
           ParameterSpec.builder(it.name, it.argumentType()).build()
         },
       )

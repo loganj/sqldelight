@@ -55,6 +55,11 @@ import com.squareup.kotlinpoet.joinToCode
 class SelectQueryGenerator(
   private val query: NamedQuery,
 ) : QueryGenerator(query) {
+
+  private val interfaceType by lazy { query.getInterfaceType() }
+  private val parameters by lazy { query.getParameters() }
+
+
   /**
    * The exposed query method which returns the default data class implementation.
    *
@@ -62,7 +67,7 @@ class SelectQueryGenerator(
    */
   fun defaultResultTypeFunction(): FunSpec {
     val argNameAllocator = NameAllocator()
-    val parametersAndTypes = query.parameters.map { argNameAllocator.newName(it.name, it) to it.argumentType() }
+    val parametersAndTypes = parameters.map { argNameAllocator.newName(it.name, it) to it.argumentType() }
 
     val function = defaultResultTypeFunctionInterface(parametersAndTypes)
     val params = parametersAndTypes.map { (name) -> CodeBlock.of(name) }
@@ -77,7 +82,7 @@ class SelectQueryGenerator(
     val trailingLambda = CodeBlock.builder()
       .add(CodeBlock.of("·{ $lamdaParams ->\n"))
       .indent()
-      .add("%T(\n", query.interfaceType)
+      .add("%T(\n", interfaceType)
       .indent()
       .add(ctorParams)
       .unindent()
@@ -111,13 +116,13 @@ class SelectQueryGenerator(
       function.addParameter(name, type)
     }
     return function
-      .returns(query.supertype().parameterizedBy(query.interfaceType))
+      .returns(query.supertype().parameterizedBy(interfaceType))
   }
 
   private fun customResultTypeFunctionInterface(): FunSpec.Builder {
     val function = FunSpec.builder(query.name).also(::addJavadoc)
 
-    query.parameters.forEach {
+    parameters.forEach {
       // Adds each sqlite parameter to the argument list:
       // fun <T> selectForId(<<id>>, <<other_param>>, ...)
       function.addParameter(it.name, it.argumentType())
@@ -255,7 +260,7 @@ class SelectQueryGenerator(
       function.addCode(
         "return %N(%L)%L",
         query.customQuerySubtype,
-        query.parameters.joinToString { it.name },
+        parameters.joinToString { it.name },
         mapperLambda.build(),
       )
     }
@@ -311,12 +316,18 @@ class SelectQueryGenerator(
         OVERRIDE,
       )
       .addTypeVariable(genericResultType)
-      .addParameter(MAPPER_NAME, LambdaTypeName.get(parameters = arrayOf(CURSOR_TYPE), returnType = QUERY_RESULT_TYPE.parameterizedBy(genericResultType)))
+      .addParameter(
+        MAPPER_NAME,
+        LambdaTypeName.get(
+          parameters = arrayOf(CURSOR_TYPE),
+          returnType = QUERY_RESULT_TYPE.parameterizedBy(genericResultType)
+        )
+      )
       .returns(QUERY_RESULT_TYPE.parameterizedBy(genericResultType))
       .addCode(executeBlock())
 
     // For each bind argument the query has.
-    query.parameters.forEach { parameter ->
+    parameters.forEach { parameter ->
       // Add the argument as a constructor property. (Used later to figure out if query dirtied)
       // val id: Int
       queryType.addProperty(

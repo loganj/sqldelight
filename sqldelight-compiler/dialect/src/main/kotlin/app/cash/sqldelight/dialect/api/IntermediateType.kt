@@ -32,6 +32,8 @@ data class IntermediateType(
    * an adapter.
    */
   val simplified: Boolean = false,
+  val nullable: Boolean = dialectType.toKotlinType().typeName.isNullable,
+
 ) {
   fun asNullable() = copy(javaType = javaType.copy(nullable = true))
 
@@ -40,4 +42,6 @@ data class IntermediateType(
   fun nullableIf(predicate: Boolean): IntermediateType {
     return if (predicate) asNullable() else asNonNullable()
   }
+
+
 }

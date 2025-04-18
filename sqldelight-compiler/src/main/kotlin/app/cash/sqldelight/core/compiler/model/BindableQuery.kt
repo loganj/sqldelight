@@ -15,7 +15,6 @@
  */
 package app.cash.sqldelight.core.compiler.model
 
-import app.cash.sqldelight.core.capitalize
 import app.cash.sqldelight.core.compiler.SqlDelightCompiler.allocateName
 import app.cash.sqldelight.core.lang.acceptsTableInterface
 import app.cash.sqldelight.core.lang.psi.ColumnTypeMixin.ValueTypeDialectType
@@ -28,7 +27,6 @@ import app.cash.sqldelight.core.lang.util.findChildrenOfType
 import app.cash.sqldelight.core.lang.util.sqFile
 import app.cash.sqldelight.core.lang.util.type
 import app.cash.sqldelight.dialect.api.IntermediateType
-import app.cash.sqldelight.dialect.api.PrimitiveType.ARGUMENT
 import app.cash.sqldelight.dialect.api.PrimitiveType.BOOLEAN
 import app.cash.sqldelight.dialect.api.PrimitiveType.INTEGER
 import app.cash.sqldelight.dialect.api.PrimitiveType.NULL
@@ -40,7 +38,6 @@ import com.alecstrong.sql.psi.core.psi.SqlIdentifier
 import com.alecstrong.sql.psi.core.psi.SqlInsertStmt
 import com.alecstrong.sql.psi.core.psi.SqlTypes
 import com.intellij.psi.PsiElement
-import com.squareup.kotlinpoet.ClassName
 import java.util.concurrent.ConcurrentHashMap
 
 abstract class BindableQuery(
@@ -52,23 +49,6 @@ abstract class BindableQuery(
   abstract val id: Int
 
   internal val javadoc: PsiElement? = identifier?.childOfType(SqlTypes.JAVADOC)
-
-  /**
-   * The collection of parameters exposed in the generated api for this query.
-   */
-  val parameters: List<IntermediateType> by lazy {
-    if (statement is SqlInsertStmt && statement.acceptsTableInterface()) {
-      val table = statement.tableName.reference!!.resolve()!!
-      return@lazy listOf(
-        IntermediateType(
-          ARGUMENT,
-          javaType = ClassName(table.sqFile().packageName!!, allocateName(statement.tableName).capitalize()),
-          name = allocateName(statement.tableName),
-        ),
-      )
-    }
-    return@lazy arguments.sortedBy { it.index }.map { it.type }
-  }
 
   /**
    * The collection of all bind expressions in this query.
