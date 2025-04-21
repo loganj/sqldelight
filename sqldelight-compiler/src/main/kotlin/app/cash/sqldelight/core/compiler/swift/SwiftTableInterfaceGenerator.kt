@@ -9,11 +9,11 @@ import com.alecstrong.sql.psi.core.psi.NamedElement
 import io.outfoxx.swiftpoet.PropertySpec
 import io.outfoxx.swiftpoet.TypeSpec
 
-internal class TableProtocolGenerator(private val table: LazyQuery) {
+internal class SwiftTableInterfaceGenerator(private val table: LazyQuery) {
   private val typeName = allocateName(table.tableName).capitalize()
 
   fun swiftImplementationSpec(): TypeSpec {
-    val typeSpec = TypeSpec.structBuilder(typeName)
+    val structSpec = TypeSpec.structBuilder(typeName)
 
     // TODO: documentation
     // TODO: adapters
@@ -24,12 +24,17 @@ internal class TableProtocolGenerator(private val table: LazyQuery) {
       val columnName = allocateName(column)
       val columnDef = column.columnDefSource()!!
       val columnType = columnDef.columnType as ColumnTypeMixin
+      val swiftType = queryColumn.nullable?.let { isNullable ->
+        if (isNullable) columnType.type().asNullable().dialectType.toSwiftType().typeName
+        else columnType.type().asNonNullable().dialectType.toSwiftType().typeName
+      } ?: columnType.type().dialectType.toSwiftType().typeName
 
-//      val property = PropertySpec.builder(columnName, columnType.type().dialectType.toSwiftType()).build()
-//      typeSpec.addProperty(property)
+      val propertySpec = PropertySpec.builder(columnName, swiftType)
+        .mutable(true)
+        .build()
+      structSpec.addProperty(propertySpec)
     }
 
-    return typeSpec.build()
+    return structSpec.build()
   }
-
 }
