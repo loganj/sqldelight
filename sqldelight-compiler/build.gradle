@@ -32,6 +32,8 @@ dependencies {
     targetConfiguration = "shadow"
   }
 
+  implementation libs.sqlPsiEnvironment
+
   testImplementation libs.burst
   testImplementation libs.sqliteJdbc
   testImplementation(projects.sqldelightCompiler.environment) {
