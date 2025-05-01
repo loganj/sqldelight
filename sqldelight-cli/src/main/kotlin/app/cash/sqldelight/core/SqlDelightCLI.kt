@@ -2,7 +2,9 @@
 package app.cash.sqldelight.core
 
 import app.cash.sqldelight.core.SqlDelightEnvironment.CompilationStatus.Failure
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.compiler.SqlDelightCompiler
+import app.cash.sqldelight.core.compiler.SwiftBackend
 import app.cash.sqldelight.dialect.api.SqlDelightDialect
 import java.io.File
 import java.nio.file.Paths
@@ -18,6 +20,7 @@ object SqlDelightCLI {
   private const val SOURCE_DIRECTORIES_FLAG = "--source-directories="
   private const val DIALECT_FLAG = "--dialect="
   private const val DESCRIPTOR_FILE_FLAG = "--descriptor-directory="
+  private const val TARGET_FLAG = "--target="
 
   @JvmStatic
   fun main(args: Array<String>) {
@@ -48,7 +51,11 @@ object SqlDelightCLI {
       ),
       verifyMigrations = false,
       dialect = dialect,
-      moduleName = arguments.moduleName
+      moduleName = arguments.moduleName,
+      backend = when(arguments.target) {
+        Target.KOTLIN -> KotlinBackend
+        Target.SWIFT -> SwiftBackend
+      },
     )
 
     val logger = Logger.getLogger(SqlDelightCompiler::class.java.name)
@@ -79,7 +86,8 @@ object SqlDelightCLI {
     val outputDirectory: File,
     val sourceDirectories: List<File>,
     val dialectClassName: String,
-    val descriptorFile: File
+    val descriptorFile: File,
+    val target: Target
   )
 
   private fun Array<String>.parseArguments(): Args {
@@ -91,6 +99,7 @@ object SqlDelightCLI {
     lateinit var sourceDirectories: List<File>
     var dialect = "sqlite_3_18"
     var descriptorFilePath: String? = null
+    var target = Target.KOTLIN
 
     for (arg in this) {
       when {
@@ -108,6 +117,8 @@ object SqlDelightCLI {
           dialect = arg.substring(DIALECT_FLAG.length)
         arg.startsWith(DESCRIPTOR_FILE_FLAG) ->
           descriptorFilePath = arg.substring(DESCRIPTOR_FILE_FLAG.length)
+        arg.startsWith(TARGET_FLAG) ->
+          target = Target.valueOf(arg.substring(TARGET_FLAG.length).trim().uppercase())
       }
     }
 
@@ -124,7 +135,13 @@ object SqlDelightCLI {
       outputDirectory = outputDirectory,
       sourceDirectories = sourceDirectories,
       dialectClassName = "app.cash.sqldelight.dialects.${dialect}.SqliteDialect",
-      descriptorFile = descriptorFile
+      descriptorFile = descriptorFile,
+      target = target
     )
   }
+}
+
+enum class Target {
+  KOTLIN,
+  SWIFT
 }
