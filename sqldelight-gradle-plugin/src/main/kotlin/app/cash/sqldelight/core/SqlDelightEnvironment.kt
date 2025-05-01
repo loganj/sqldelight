@@ -145,7 +145,7 @@ class SqlDelightEnvironment(
     val writer = writer@{ fileName: String ->
       val file = File(fileName)
       if (!file.exists()) {
-        file.parentFile.mkdirs()
+        file.parentFile?.mkdirs()
         file.createNewFile()
       }
       return@writer file.writer()
