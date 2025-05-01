@@ -10,6 +10,7 @@ import app.cash.sqldelight.core.lang.util.sqFile
 import app.cash.sqldelight.dialect.api.SqlDelightDialect
 import com.alecstrong.sql.psi.core.psi.LazyQuery
 import com.alecstrong.sql.psi.core.psi.NamedElement
+import com.alecstrong.sql.psi.core.psi.SqlCreateVirtualTableStmt
 import com.intellij.openapi.module.Module
 import com.intellij.psi.PsiElement
 import io.outfoxx.swiftpoet.FileSpec
@@ -49,11 +50,16 @@ object SwiftBackend : Backend() {
   }
 
   override fun needsInterface(query: NamedQuery): Boolean {
-    return false
+    val needsWrapper = needsWrapper(query)
+    val pureTable = query.pureTable
+    val parent = pureTable?.parent
+
+    return needsWrapper && (pureTable == null || parent is SqlCreateVirtualTableStmt)
   }
 
   override fun needsWrapper(query: NamedQuery): Boolean {
-    return false
+    // TODO: get rid of javaType
+    return query.resultColumns.size > 1 || query.resultColumns[0].javaType.isNullable
   }
 
   override fun writeQueryInterface(
