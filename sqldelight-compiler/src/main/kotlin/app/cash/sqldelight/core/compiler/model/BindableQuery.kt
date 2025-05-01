@@ -15,7 +15,7 @@
  */
 package app.cash.sqldelight.core.compiler.model
 
-import app.cash.sqldelight.core.compiler.SqlDelightCompiler.allocateName
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.lang.acceptsTableInterface
 import app.cash.sqldelight.core.lang.psi.ColumnTypeMixin.ValueTypeDialectType
 import app.cash.sqldelight.core.lang.psi.StmtIdentifierMixin
@@ -60,7 +60,7 @@ abstract class BindableQuery(
           index + 1,
           column.type().let {
             it.copy(
-              name = "${allocateName(statement.tableName)}.${it.name}",
+              name = "${KotlinBackend.allocateName(statement.tableName)}.${it.name}",
             )
           },
         )

@@ -16,7 +16,7 @@
 package app.cash.sqldelight.core.lang.psi
 
 import app.cash.sqldelight.core.capitalize
-import app.cash.sqldelight.core.compiler.SqlDelightCompiler.allocateName
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.lang.types.typeResolver
 import app.cash.sqldelight.core.lang.util.sqFile
 import app.cash.sqldelight.core.psi.SqlDelightAnnotation
@@ -29,7 +29,6 @@ import app.cash.sqldelight.core.psi.SqlDelightStmtList
 import app.cash.sqldelight.dialect.api.DialectType
 import app.cash.sqldelight.dialect.api.IntermediateType
 import app.cash.sqldelight.dialect.api.KotlinType
-import app.cash.sqldelight.dialect.api.TargetType
 import com.alecstrong.sql.psi.core.SqlAnnotationHolder
 import com.alecstrong.sql.psi.core.psi.Queryable
 import com.alecstrong.sql.psi.core.psi.SqlColumnDef
@@ -67,7 +66,10 @@ internal abstract class ColumnTypeMixin(
     val columnName = parent.columnName
     val columnConstraintList = parent.columnConstraintList
 
-    var type = typeResolver.definitionType(typeName).copy(column = parent, name = allocateName(columnName))
+    var type = typeResolver.definitionType(typeName).copy(
+      column = parent,
+      name = KotlinBackend.allocateName(columnName)
+    )
     javaTypeName?.type()?.let { type = type.copy(javaType = it) }
 
     // Ensure we use the same value type for a foreign key.
@@ -132,7 +134,7 @@ internal abstract class ColumnTypeMixin(
       }
       return PropertySpec
         .builder(
-          name = "${allocateName(columnName)}Adapter",
+          name = "${KotlinBackend.allocateName(columnName)}Adapter",
           type = columnAdapterType.parameterizedBy(
             customType,
             typeResolver.definitionType(typeName).dialectType.toKotlinType().typeName
@@ -252,7 +254,7 @@ internal abstract class ColumnTypeMixin(
     private val kotlinType: KotlinType = object : KotlinType {
       override val typeName: TypeName by lazy {
         val tableName = PsiTreeUtil.getParentOfType(this@ColumnTypeMixin, Queryable::class.java)!!.tableExposed().tableName
-        ClassName(tableName.sqFile().packageName!!, allocateName(tableName).capitalize(), name)
+        ClassName(tableName.sqFile().packageName!!, KotlinBackend.allocateName(tableName).capitalize(), name)
       }
 
       override fun cursorGetter(columnIndex: Int, cursorName: String): CodeBlock =

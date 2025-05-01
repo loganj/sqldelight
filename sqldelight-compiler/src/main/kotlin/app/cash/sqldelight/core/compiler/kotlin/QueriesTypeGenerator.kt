@@ -1,5 +1,6 @@
 package app.cash.sqldelight.core.compiler.kotlin
 
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.compiler.model.NamedExecute
 import app.cash.sqldelight.core.compiler.model.NamedMutator
 import app.cash.sqldelight.core.compiler.tryWithElement
@@ -59,7 +60,7 @@ class QueriesTypeGenerator(
 
             type.addFunction(generator.customResultTypeFunction())
 
-            if (query.needsWrapper()) {
+            if (KotlinBackend.needsWrapper(query)) {
                 type.addFunction(generator.defaultResultTypeFunction())
             }
 

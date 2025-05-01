@@ -15,7 +15,7 @@
  */
 package app.cash.sqldelight.core.compiler.kotlin
 
-import app.cash.sqldelight.core.compiler.SqlDelightCompiler.allocateName
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.compiler.model.NamedQuery
 import app.cash.sqldelight.core.lang.ADAPTER_NAME
 import app.cash.sqldelight.core.lang.CURSOR_NAME
@@ -128,7 +128,7 @@ class SelectQueryGenerator(
       function.addParameter(it.name, it.argumentType())
     }
 
-    if (query.needsWrapper()) {
+    if (KotlinBackend.needsWrapper(query)) {
       // Function takes a custom mapper.
 
       // Add the type variable to the signature.
@@ -176,8 +176,10 @@ class SelectQueryGenerator(
         .takeIf { it.size > 1 }
         ?.map { assumedCompatibleType ->
           (assumedCompatibleType.column?.columnType as ColumnTypeMixin?)?.let { columnTypeMixin ->
-            val tableAdapterName = "${(assumedCompatibleType.column!!.parent as SqlCreateTableStmt).name()}$ADAPTER_NAME"
-            val columnAdapterName = "${allocateName((columnTypeMixin.parent as SqlColumnDef).columnName)}$ADAPTER_NAME"
+            val tableAdapterName =
+              "${(assumedCompatibleType.column!!.parent as SqlCreateTableStmt).name()}$ADAPTER_NAME"
+            val columnAdapterName =
+              "${KotlinBackend.allocateName((columnTypeMixin.parent as SqlColumnDef).columnName)}$ADAPTER_NAME"
             "$tableAdapterName.$columnAdapterName"
           }
         }
@@ -207,7 +209,7 @@ class SelectQueryGenerator(
       mapperLambda.addStatement("check(cursor is %T)", dialectCursorType)
     }
 
-    if (query.needsWrapper()) {
+    if (KotlinBackend.needsWrapper(query)) {
       mapperLambda.add("$MAPPER_NAME(\n")
 
       // Add the call of mapper with the deserialized columns:

@@ -16,32 +16,18 @@
 package app.cash.sqldelight.core.compiler
 
 import app.cash.sqldelight.core.SqlDelightFileIndex
-import app.cash.sqldelight.core.capitalize
-import app.cash.sqldelight.core.compiler.kotlin.DatabaseExposerGenerator
-import app.cash.sqldelight.core.compiler.kotlin.DatabaseGenerator
-import app.cash.sqldelight.core.compiler.kotlin.QueriesTypeGenerator
-import app.cash.sqldelight.core.compiler.kotlin.QueryInterfaceGenerator
-import app.cash.sqldelight.core.compiler.kotlin.TableInterfaceGenerator
-import app.cash.sqldelight.core.compiler.kotlin.getInterfaceType
 import app.cash.sqldelight.core.compiler.model.NamedQuery
 import app.cash.sqldelight.core.lang.MigrationFile
 import app.cash.sqldelight.core.lang.SqlDelightFile
 import app.cash.sqldelight.core.lang.SqlDelightQueriesFile
-import app.cash.sqldelight.core.lang.queriesName
-import app.cash.sqldelight.core.lang.util.sqFile
 import app.cash.sqldelight.dialect.api.SelectQueryable
 import app.cash.sqldelight.dialect.api.SqlDelightDialect
 import com.alecstrong.sql.psi.core.psi.InvalidElementDetectedException
-import com.alecstrong.sql.psi.core.psi.NamedElement
 import com.alecstrong.sql.psi.core.psi.SqlCreateViewStmt
 import com.alecstrong.sql.psi.core.psi.SqlCreateVirtualTableStmt
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.psi.PsiElement
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.NameAllocator
-import java.io.Closeable
 
 private typealias FileAppender = (fileName: String) -> Appendable
 
@@ -51,11 +37,12 @@ object SqlDelightCompiler {
     dialect: SqlDelightDialect,
     file: SqlDelightQueriesFile,
     output: FileAppender,
+    backend: Backend = KotlinBackend
   ) {
     try {
-      writeTableInterfaces(file, output)
-      writeQueryInterfaces(file, output)
-      writeQueries(module, dialect, file, output)
+      writeTableInterfaces(file, output, backend = backend)
+      writeQueryInterfaces(file, output, backend)
+      writeQueries(module, dialect, file, output, backend)
     } catch (e: InvalidElementDetectedException) {
       // It's okay if compilation is cut short, we can just quit out.
     }
@@ -65,8 +52,9 @@ object SqlDelightCompiler {
     file: MigrationFile,
     output: FileAppender,
     includeAll: Boolean = false,
+    backend: Backend = KotlinBackend
   ) {
-    writeTableInterfaces(file, output, includeAll)
+    writeTableInterfaces(file, output, includeAll, backend = backend)
   }
 
   fun writeDatabaseInterface(
@@ -74,8 +62,14 @@ object SqlDelightCompiler {
     file: SqlDelightFile,
     implementationFolder: String,
     output: FileAppender,
+    backend: Backend = KotlinBackend
   ) {
-    writeQueryWrapperInterface(module, file, implementationFolder, output)
+    val fileIndex = SqlDelightFileIndex.getInstance(module)
+    val packageName = fileIndex.packageName
+    val outputPaths = fileIndex.outputDirectory(file)
+    val dependencies = fileIndex.dependencies
+
+    backend.writeDatabaseInterface(module, file, packageName, implementationFolder, dependencies, outputPaths, output)
   }
 
   fun writeImplementations(
@@ -83,88 +77,44 @@ object SqlDelightCompiler {
     sourceFile: SqlDelightFile,
     implementationFolder: String,
     output: FileAppender,
-  ) {
-    val fileIndex = SqlDelightFileIndex.getInstance(module)
-    val packageName = "${fileIndex.packageName}.$implementationFolder"
-    val databaseImplementationType = DatabaseGenerator(module, sourceFile).type()
-    val exposer = DatabaseExposerGenerator(databaseImplementationType, fileIndex, sourceFile.generateAsync)
-
-    val fileSpec = FileSpec.builder(packageName, databaseImplementationType.name!!)
-      .addProperty(exposer.exposedSchema())
-      .addFunction(exposer.exposedConstructor())
-      .addType(databaseImplementationType)
-      .build()
-
-    fileIndex.outputDirectory(sourceFile).forEach { outputDirectory ->
-      val packageDirectory = "$outputDirectory/${packageName.replace(".", "/")}"
-      fileSpec.writeToAndClose(output("$packageDirectory/${databaseImplementationType.name}.kt"))
-    }
-  }
-
-  private fun writeQueryWrapperInterface(
-    module: Module,
-    sourceFile: SqlDelightFile,
-    implementationFolder: String,
-    output: FileAppender,
+    backend: Backend
   ) {
     val fileIndex = SqlDelightFileIndex.getInstance(module)
     val packageName = fileIndex.packageName
-    val queryWrapperType = DatabaseGenerator(module, sourceFile).interfaceType()
-    val fileSpec = FileSpec.builder(packageName, queryWrapperType.name!!)
-      // TODO: Remove these when kotlinpoet supports top level types.
-      .addImport("$packageName.$implementationFolder", "newInstance", "schema")
-      .apply {
-        var index = 0
-        fileIndex.dependencies.forEach {
-          addAliasedImport(ClassName(it.packageName, it.className), "${it.className}${index++}")
-        }
-      }
-      .addType(queryWrapperType)
-      .build()
+    val className = fileIndex.className
+    val outputDirectories = fileIndex.outputDirectory(sourceFile)
 
-    fileIndex.outputDirectory(sourceFile).forEach { outputDirectory ->
-      val packageDirectory = "$outputDirectory/${packageName.replace(".", "/")}"
-      fileSpec.writeToAndClose(output("$packageDirectory/${queryWrapperType.name}.kt"))
-    }
+    backend.writeImplementations(module, sourceFile, packageName, className, implementationFolder, outputDirectories, output)
   }
 
   internal fun writeTableInterfaces(
     file: SqlDelightFile,
     output: FileAppender,
     includeAll: Boolean = false,
+    backend: Backend
   ) {
     val packageName = file.packageName ?: return
     file.tables(includeAll).forEach { query ->
       val statement = query.tableName.parent
 
       if (statement is SqlCreateViewStmt && statement.compoundSelectStmt != null) {
-        listOf(NamedQuery(allocateName(statement.viewName), SelectQueryable(statement.compoundSelectStmt!!)))
-          .writeQueryInterfaces(file, output)
+        listOf(NamedQuery(backend.allocateName(statement.viewName), SelectQueryable(statement.compoundSelectStmt!!)))
+          .writeQueryInterfaces(file, output, backend)
         return@forEach
       }
 
       if (statement is SqlCreateVirtualTableStmt) return@forEach
 
-      val fileSpec = FileSpec.builder(packageName, allocateName(query.tableName))
-        .apply {
-          tryWithElement(statement) {
-            val generator = TableInterfaceGenerator(query)
-            addType(generator.kotlinImplementationSpec())
-          }
-        }
-        .build()
-
-      statement.sqFile().generatedDirectories?.forEach { directory ->
-        fileSpec.writeToAndClose(output("$directory/${allocateName(query.tableName).capitalize()}.kt"))
-      }
+      backend.writeTableInterface(packageName, query, statement, output)
     }
   }
 
   internal fun writeQueryInterfaces(
     file: SqlDelightQueriesFile,
     output: FileAppender,
+    backend: Backend
   ) {
-    file.namedQueries.writeQueryInterfaces(file, output)
+    file.namedQueries.writeQueryInterfaces(file, output, backend)
   }
 
   internal fun writeQueries(
@@ -172,57 +122,15 @@ object SqlDelightCompiler {
     dialect: SqlDelightDialect,
     file: SqlDelightQueriesFile,
     output: FileAppender,
+    backend: Backend
   ) {
     val packageName = file.packageName ?: return
-    val queriesType = QueriesTypeGenerator(module, file, dialect)
-      .generateType(packageName) ?: return
-
-    val fileSpec = FileSpec.builder(packageName, file.queriesName.capitalize())
-      .addType(queriesType)
-      .build()
-
-    file.generatedDirectories?.forEach { directory ->
-      fileSpec.writeToAndClose(output("$directory/${queriesType.name}.kt"))
-    }
+    backend.writeQueries(module, file, dialect, packageName, output)
   }
 
-  internal fun allocateName(namedElement: NamedElement): String {
-    return NameAllocator().newName(namedElement.normalizedName)
-  }
-
-  private fun List<NamedQuery>.writeQueryInterfaces(file: SqlDelightFile, output: FileAppender) {
-    return filter { tryWithElement(it.select) { it.needsInterface() } == true }
-      .forEach { namedQuery ->
-        val packageName = namedQuery.getInterfaceType().packageName
-        val fileSpec = FileSpec.builder(packageName, namedQuery.name)
-          .apply {
-            tryWithElement(namedQuery.select) {
-              val generator = QueryInterfaceGenerator(namedQuery)
-              addType(generator.kotlinImplementationSpec())
-            }
-          }
-          .build()
-
-        file.generatedDirectories(packageName)?.forEach { directory ->
-          fileSpec.writeToAndClose(output("$directory/${namedQuery.name.capitalize()}.kt"))
-        }
-      }
-  }
-
-  private val NamedElement.normalizedName: String
-    get() {
-      val f = name[0]
-      val l = name[name.lastIndex]
-      return if ((f in "\"'`" && f == l) || (f == '[' && l == ']')) {
-        name.substring(1, name.length - 1)
-      } else {
-        name
-      }
-    }
-
-  private fun FileSpec.writeToAndClose(appendable: Appendable) {
-    writeTo(appendable)
-    if (appendable is Closeable) appendable.close()
+  private fun List<NamedQuery>.writeQueryInterfaces(file: SqlDelightFile, output: FileAppender, backend: Backend) {
+    return filter { tryWithElement(it.select) { backend.needsInterface(it) } == true }
+      .forEach { namedQuery -> backend.writeQueryInterface(namedQuery, file, output) }
   }
 }
 
@@ -243,3 +151,4 @@ internal fun <T> tryWithElement(
     throw exception
   }
 }
+

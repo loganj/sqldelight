@@ -16,6 +16,8 @@
 package app.cash.sqldelight.core
 
 import app.cash.sqldelight.core.annotators.OptimisticLockCompilerAnnotator
+import app.cash.sqldelight.core.compiler.Backend
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.compiler.SqlDelightCompiler
 import app.cash.sqldelight.core.lang.DatabaseFileType
 import app.cash.sqldelight.core.lang.DatabaseFileViewProviderFactory
@@ -70,6 +72,7 @@ class SqlDelightEnvironment(
   private val dependencyFolders: List<File> = compilationUnit.sourceFolders
     .filter { it.folder.exists() && it.dependency }
     .map { it.folder },
+  private val backend: Backend = KotlinBackend
 ) : SqlCoreEnvironment(sourceFolders, dependencyFolders),
   SqlDelightProjectService {
   val project = projectEnvironment.project
@@ -162,7 +165,7 @@ class SqlDelightEnvironment(
       if (it !is SqlDelightQueriesFile) return@forSourceFiles
       logger("----- START ${it.name} ms -------")
       val timeTaken = measureTimeMillis {
-        SqlDelightCompiler.writeInterfaces(module, dialect, it, writer)
+        SqlDelightCompiler.writeInterfaces(module, dialect, it, writer, backend)
         sourceFile = it
       }
       logger("----- END ${it.name} in $timeTaken ms ------")
@@ -175,16 +178,17 @@ class SqlDelightEnvironment(
           file = migrationFile,
           output = writer,
           includeAll = true,
+          backend
         )
-        SqlDelightCompiler.writeImplementations(module, migrationFile, moduleName, writer)
+        SqlDelightCompiler.writeImplementations(module, migrationFile, moduleName, writer, backend)
       }
       logger("----- END ${migrationFile.name} in $timeTaken ms ------")
     }
 
     sourceFile?.let {
-      SqlDelightCompiler.writeDatabaseInterface(module, it, moduleName, writer)
+      SqlDelightCompiler.writeDatabaseInterface(module, it, moduleName, writer, backend)
       if (it is SqlDelightQueriesFile) {
-        SqlDelightCompiler.writeImplementations(module, it, moduleName, writer)
+        SqlDelightCompiler.writeImplementations(module, it, moduleName, writer, backend)
       }
     }
 

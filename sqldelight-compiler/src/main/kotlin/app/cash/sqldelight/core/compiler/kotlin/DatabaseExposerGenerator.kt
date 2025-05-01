@@ -17,10 +17,12 @@ import kotlin.reflect.KClass
 
 internal class DatabaseExposerGenerator(
   val implementation: TypeSpec,
-  val fileIndex: SqlDelightFileIndex,
+  val packageName: String,
+  val className: String,
   val generateAsync: Boolean,
 ) {
-  private val interfaceType = ClassName(fileIndex.packageName, fileIndex.className)
+
+  private val interfaceType = ClassName(packageName, className)
 
   fun exposedSchema(): PropertySpec {
     return PropertySpec.builder(
@@ -44,7 +46,7 @@ internal class DatabaseExposerGenerator(
     return implementation.primaryConstructor!!.let { constructor ->
       FunSpec.builder("newInstance")
         .addModifiers(KModifier.INTERNAL)
-        .returns(ClassName(fileIndex.packageName, fileIndex.className))
+        .returns(ClassName(packageName, className))
         .receiver(KClass::class.asTypeName().parameterizedBy(interfaceType))
         .addParameters(constructor.parameters)
         .addStatement("return %N(%L)", implementation, constructor.parameters.map { CodeBlock.of("%N", it) }.joinToCode(", "))

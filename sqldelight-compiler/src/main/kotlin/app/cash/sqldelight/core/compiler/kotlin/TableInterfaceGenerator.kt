@@ -16,7 +16,7 @@
 package app.cash.sqldelight.core.compiler.kotlin
 
 import app.cash.sqldelight.core.capitalize
-import app.cash.sqldelight.core.compiler.SqlDelightCompiler.allocateName
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.compiler.kotlin.integration.javadocText
 import app.cash.sqldelight.core.lang.ADAPTER_NAME
 import app.cash.sqldelight.core.lang.psi.ColumnTypeMixin
@@ -35,7 +35,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 
 internal class TableInterfaceGenerator(private val table: LazyQuery) {
-  private val typeName = allocateName(table.tableName).capitalize()
+  private val typeName = KotlinBackend.allocateName(table.tableName).capitalize()
 
   fun kotlinImplementationSpec(): TypeSpec {
     val typeSpec = TypeSpec.classBuilder(typeName)
@@ -53,7 +53,7 @@ internal class TableInterfaceGenerator(private val table: LazyQuery) {
 
     table.query.columns.forEach { queryColumn ->
       val column = queryColumn.element as NamedElement
-      val columnName = allocateName(column)
+      val columnName = KotlinBackend.allocateName(column)
       val columnDef = column.columnDefSource()!!
       val columnType = columnDef.columnType as ColumnTypeMixin
       val javaType = queryColumn.nullable?.let { isNullable ->

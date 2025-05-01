@@ -1,7 +1,7 @@
 package app.cash.sqldelight.core.compiler.kotlin
 
 import app.cash.sqldelight.core.capitalize
-import app.cash.sqldelight.core.compiler.SqlDelightCompiler
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.compiler.model.BindableQuery
 import app.cash.sqldelight.core.compiler.model.NamedQuery
 import app.cash.sqldelight.core.decapitalize
@@ -29,9 +29,9 @@ fun BindableQuery.getParameters(): List<IntermediateType> {
         PrimitiveType.ARGUMENT,
         javaType = ClassName(
           table.sqFile().packageName!!,
-          SqlDelightCompiler.allocateName(statement.tableName).capitalize()
+          KotlinBackend.allocateName(statement.tableName).capitalize()
         ),
-        name = SqlDelightCompiler.allocateName(statement.tableName),
+        name = KotlinBackend.allocateName(statement.tableName),
       ),
     )
   }
@@ -70,12 +70,12 @@ internal fun NamedQuery.getInterfaceType(): ClassName {
 
   val pureTable = pureTable
   if (pureTable != null && pureTable.parent !is SqlCreateVirtualTableStmt) {
-    return ClassName(pureTable.sqFile().packageName!!, SqlDelightCompiler.allocateName(pureTable).capitalize())
+    return ClassName(pureTable.sqFile().packageName!!, KotlinBackend.allocateName(pureTable).capitalize())
   }
   var packageName = queryable.select.sqFile().packageName!!
   if (queryable.select.sqFile().parent?.files
       ?.filterIsInstance<SqlDelightQueriesFile>()?.flatMap { it.namedQueries }
-      ?.filter { it.needsInterface() && it != this }
+      ?.filter { KotlinBackend.needsInterface(it) && it != this }
       ?.any { it.name == name } == true
   ) {
     packageName = "$packageName.${queryable.select.sqFile().virtualFile!!.nameWithoutExtension.decapitalize()}"

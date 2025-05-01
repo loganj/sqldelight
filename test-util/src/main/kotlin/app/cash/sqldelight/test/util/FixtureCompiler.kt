@@ -16,6 +16,8 @@
 
 package app.cash.sqldelight.test.util
 
+import app.cash.sqldelight.core.compiler.Backend
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.compiler.SqlDelightCompiler
 import app.cash.sqldelight.core.lang.MigrationFile
 import app.cash.sqldelight.core.lang.SqlDelightQueriesFile
@@ -29,7 +31,7 @@ import com.intellij.psi.PsiFile
 import java.io.File
 import org.junit.rules.TemporaryFolder
 
-private typealias CompilationMethod = (Module, SqlDelightDialect, SqlDelightQueriesFile, (String) -> Appendable) -> Unit
+private typealias CompilationMethod = (Module, SqlDelightDialect, SqlDelightQueriesFile, (String) -> Appendable, Backend) -> Unit
 
 object FixtureCompiler {
 
@@ -41,6 +43,7 @@ object FixtureCompiler {
     fileName: String = "Test.sq",
     treatNullAsUnknownForEquality: Boolean = false,
     generateAsync: Boolean = false,
+    backend: Backend = KotlinBackend
   ): CompilationResult {
     writeSql(sql, temporaryFolder, fileName)
     return compileFixture(
@@ -49,6 +52,7 @@ object FixtureCompiler {
       overrideDialect = overrideDialect,
       treatNullAsUnknownForEquality = treatNullAsUnknownForEquality,
       generateAsync = generateAsync,
+      backend = backend
     )
   }
 
@@ -103,6 +107,7 @@ object FixtureCompiler {
     deriveSchemaFromMigrations: Boolean = false,
     treatNullAsUnknownForEquality: Boolean = false,
     generateAsync: Boolean = false,
+    backend: Backend = KotlinBackend,
   ): CompilationResult {
     val compilerOutput = mutableMapOf<File, StringBuilder>()
     val errors = mutableListOf<String>()
@@ -125,7 +130,7 @@ object FixtureCompiler {
       psiFile.log(sourceFiles)
       if (psiFile is SqlDelightQueriesFile) {
         if (errors.isEmpty()) {
-          compilationMethod(environment.module, environment.dialect, psiFile, fileWriter)
+          compilationMethod(environment.module, environment.dialect, psiFile, fileWriter, backend)
         }
         file = psiFile
       } else if (psiFile is MigrationFile) {
@@ -140,16 +145,18 @@ object FixtureCompiler {
         file = topMigration!!,
         output = fileWriter,
         includeAll = true,
+        backend = backend
       )
     }
 
     if (generateDb) {
-      SqlDelightCompiler.writeDatabaseInterface(environment.module, file!!, "testmodule", fileWriter)
+      SqlDelightCompiler.writeDatabaseInterface(environment.module, file!!, "testmodule", fileWriter, backend)
       SqlDelightCompiler.writeImplementations(
         environment.module,
         file!!,
         "testmodule",
         fileWriter,
+        backend
       )
     }
 

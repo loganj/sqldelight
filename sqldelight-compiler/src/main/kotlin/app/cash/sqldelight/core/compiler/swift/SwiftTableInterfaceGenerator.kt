@@ -1,7 +1,7 @@
 package app.cash.sqldelight.core.compiler.swift
 
 import app.cash.sqldelight.core.capitalize
-import app.cash.sqldelight.core.compiler.SqlDelightCompiler.allocateName
+import app.cash.sqldelight.core.compiler.SwiftBackend.allocateName
 import app.cash.sqldelight.core.lang.psi.ColumnTypeMixin
 import app.cash.sqldelight.core.lang.util.columnDefSource
 import com.alecstrong.sql.psi.core.psi.LazyQuery

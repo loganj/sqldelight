@@ -1,7 +1,7 @@
 package app.cash.sqldelight.core.compiler.kotlin.integration
 
 import app.cash.sqldelight.core.capitalize
-import app.cash.sqldelight.core.compiler.SqlDelightCompiler
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.lang.ADAPTER_NAME
 import app.cash.sqldelight.core.lang.SqlDelightFile
 import app.cash.sqldelight.core.lang.psi.ColumnTypeMixin
@@ -21,9 +21,9 @@ internal fun LazyQuery.needsAdapters() = when (tableName.parent) {
 
 internal fun LazyQuery.adapterProperty(): PropertySpec {
   val adapterType = ClassName(
-    (tableName.containingFile as SqlDelightFile).packageName!!,
-    SqlDelightCompiler.allocateName(tableName).capitalize(),
-    ADAPTER_NAME,
+      (tableName.containingFile as SqlDelightFile).packageName!!,
+      KotlinBackend.allocateName(tableName).capitalize(),
+      ADAPTER_NAME,
   )
   return PropertySpec.builder(adapterName, adapterType, KModifier.PRIVATE)
     .initializer(adapterName)
@@ -36,4 +36,4 @@ private fun LazyQuery.columns() = when (val parentRule = tableName.parent) {
 }
 
 internal val LazyQuery.adapterName
-  get() = "${SqlDelightCompiler.allocateName(tableName)}$ADAPTER_NAME"
+    get() = "${KotlinBackend.allocateName(tableName)}$ADAPTER_NAME"

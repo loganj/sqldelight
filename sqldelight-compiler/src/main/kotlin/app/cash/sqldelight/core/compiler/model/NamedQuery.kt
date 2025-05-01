@@ -16,7 +16,7 @@
 package app.cash.sqldelight.core.compiler.model
 
 import app.cash.sqldelight.core.capitalize
-import app.cash.sqldelight.core.compiler.SqlDelightCompiler.allocateName
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.lang.cursorGetter
 import app.cash.sqldelight.core.lang.psi.StmtIdentifierMixin
 import app.cash.sqldelight.core.lang.util.TableNameElement
@@ -38,7 +38,6 @@ import app.cash.sqldelight.dialect.api.SelectQueryable
 import com.alecstrong.sql.psi.core.psi.NamedElement
 import com.alecstrong.sql.psi.core.psi.QueryElement
 import com.alecstrong.sql.psi.core.psi.SqlCompoundSelectStmt
-import com.alecstrong.sql.psi.core.psi.SqlCreateVirtualTableStmt
 import com.alecstrong.sql.psi.core.psi.SqlExpr
 import com.alecstrong.sql.psi.core.psi.SqlPragmaName
 import com.alecstrong.sql.psi.core.psi.SqlValuesExpression
@@ -79,19 +78,6 @@ data class NamedQuery(
       return@fold results.zip(compoundSelect, this::superType)
     }
   }
-
-  /**
-   * @return true if this query needs its own interface generated.
-   */
-  internal fun needsInterface(): Boolean {
-    val needsWrapper = needsWrapper()
-    val pureTable = pureTable
-    val parent = pureTable?.parent
-
-    return needsWrapper && (pureTable == null || parent is SqlCreateVirtualTableStmt)
-  }
-
-  internal fun needsWrapper() = (resultColumns.size > 1 || resultColumns[0].javaType.isNullable)
 
   internal fun needsQuerySubType() = arguments.isNotEmpty() || statement is SqlDelightStmtClojureStmtList
 
@@ -158,7 +144,7 @@ data class NamedQuery(
   }
 
   private fun PsiElement.functionName() = when (this) {
-    is NamedElement -> allocateName(this)
+    is NamedElement -> KotlinBackend.allocateName(this)
     is SqlExpr -> name
     is SqlPragmaName -> text
     else -> throw IllegalStateException("Cannot get name for type ${this.javaClass}")

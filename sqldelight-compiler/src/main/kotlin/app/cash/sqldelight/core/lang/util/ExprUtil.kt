@@ -15,7 +15,7 @@
  */
 package app.cash.sqldelight.core.lang.util
 
-import app.cash.sqldelight.core.compiler.SqlDelightCompiler.allocateName
+import app.cash.sqldelight.core.compiler.KotlinBackend
 import app.cash.sqldelight.core.lang.types.typeResolver
 import app.cash.sqldelight.dialect.api.IntermediateType
 import app.cash.sqldelight.dialect.api.PragmaWithResults
@@ -61,13 +61,14 @@ import com.alecstrong.sql.psi.core.psi.SqlUnaryExpr
 import com.intellij.psi.PsiElement
 import com.intellij.psi.tree.TokenSet
 
-internal val SqlExpr.name: String get() = when (this) {
-  is SqlCastExpr -> expr.name
-  is SqlParenExpr -> expr?.name ?: "value"
-  is SqlFunctionExpr -> functionName.text
-  is SqlColumnExpr -> allocateName(columnName)
-  else -> "expr"
-}
+internal val SqlExpr.name: String
+  get() = when (this) {
+    is SqlCastExpr -> expr.name
+    is SqlParenExpr -> expr?.name ?: "value"
+    is SqlFunctionExpr -> functionName.text
+    is SqlColumnExpr -> KotlinBackend.allocateName(columnName)
+    else -> "expr"
+  }
 
 internal object AnsiSqlTypeResolver : TypeResolver {
   override fun resolvedType(expr: SqlExpr): IntermediateType {
