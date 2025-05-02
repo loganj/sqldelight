@@ -20,6 +20,7 @@ sqldelight-gradle-plugin/src/test/integration/build-cache/
 xcuserdata
 Pods
 iosApp.xcworkspace
+.build
 
 # Mkdocs
 site/
